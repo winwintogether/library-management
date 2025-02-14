@@ -35,7 +35,13 @@ class BookViewSet(viewsets.ModelViewSet):
 class LoanViewSet(viewsets.ModelViewSet):
     queryset = Loan.objects.all()
     serializer_class = LoanSerializer
-    permission_classes = [permissions.IsAuthenticated]
+
+    def get_permissions(self):
+        if self.action in ['list', 'update', 'partial_update', 'destroy', 'return_book']:
+            permission_classes = [IsAdminUser]
+        else:
+            permission_classes = [permissions.IsAuthenticated]
+        return [permission() for permission in permission_classes]
 
     def create(self, request):
         book = Book.objects.get(pk=request.data['book'])
@@ -60,7 +66,7 @@ class LoanViewSet(viewsets.ModelViewSet):
         )
 
     @action(detail=True, methods=['post'])
-    def return_book(self, request, pk=None):
+    def return_book(self):
         loan = self.get_object()
         if loan.is_returned:
             return Response(
