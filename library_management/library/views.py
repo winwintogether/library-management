@@ -3,7 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.utils import timezone
 from .models import User, Book, Loan
-from .serializers import UserSerializer
+from .serializers import BookSerializer, UserSerializer
 
 class IsAdminUser(permissions.BasePermission):
     def has_permission(self, request, view):
@@ -18,4 +18,16 @@ class UserViewSet(viewsets.ModelViewSet):
             permission_classes = [permissions.AllowAny]
         else:
             permission_classes = [IsAdminUser]
+        return [permission() for permission in permission_classes]
+
+class BookViewSet(viewsets.ModelViewSet):
+    queryset = Book.objects.all()
+    serializer_class = BookSerializer
+    filterset_fields = ['title', 'author', 'isbn']
+
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            permission_classes = [IsAdminUser]
+        else:
+            permission_classes = [permissions.AllowAny]
         return [permission() for permission in permission_classes]

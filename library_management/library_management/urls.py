@@ -27,12 +27,12 @@ from library import urls
 
 schema_view = get_schema_view(
    openapi.Info(
-      title="Snippets API",
+      title="Library Management API",
       default_version='v1',
-      description="Test description",
+      description="Library Management API documentation",
       terms_of_service="https://www.google.com/policies/terms/",
       contact=openapi.Contact(email="contact@snippets.local"),
-      license=openapi.License(name="BSD License"),
+      license=openapi.License(name="LMA License"),
    ),
    public=True,
    permission_classes=(permissions.AllowAny,),
