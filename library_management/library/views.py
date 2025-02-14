@@ -3,7 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.utils import timezone
 from .models import User, Book, Loan
-from .serializers import BookSerializer, UserSerializer
+from .serializers import BookSerializer, LoanSerializer, UserSerializer
 
 class IsAdminUser(permissions.BasePermission):
     def has_permission(self, request, view):
@@ -31,3 +31,52 @@ class BookViewSet(viewsets.ModelViewSet):
         else:
             permission_classes = [permissions.AllowAny]
         return [permission() for permission in permission_classes]
+
+class LoanViewSet(viewsets.ModelViewSet):
+    queryset = Loan.objects.all()
+    serializer_class = LoanSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def create(self, request):
+        book = Book.objects.get(pk=request.data['book'])
+
+        if book.available_quantity <= 0:
+            return Response(
+                {'error': 'Book is not available'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        loan = Loan.objects.create(
+            user=request.user,
+            book=book,
+            borrowed_date=timezone.now()
+        )
+        book.available_quantity -= 1
+        book.save()
+
+        return Response(
+            LoanSerializer(loan).data,
+            status=status.HTTP_201_CREATED
+        )
+
+    @action(detail=True, methods=['post'])
+    def return_book(self, request, pk=None):
+        loan = self.get_object()
+        if loan.is_returned:
+            return Response(
+                {'error': 'Book already returned'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        loan.is_returned = True
+        loan.return_date = timezone.now()
+        loan.save()
+
+        book = loan.book
+        book.available_quantity += 1
+        book.save()
+
+        return Response(
+            LoanSerializer(loan).data,
+            status=status.HTTP_200_OK
+        )

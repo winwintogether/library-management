@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Book
+from .models import Loan, User, Book
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -15,3 +15,9 @@ class BookSerializer(serializers.ModelSerializer):
     class Meta:
         model = Book
         fields = '__all__'
+
+class LoanSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Loan
+        fields = '__all__'
+        read_only_fields = ('user', 'borrowed_date', 'is_returned')
